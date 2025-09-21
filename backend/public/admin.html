@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafd;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #2a7ae2;
+      margin-bottom: 1rem;
+    }
+
+    #welcome {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      color: #333;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: white;
+      background-color: #2a7ae2;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1e5bb8;
+    }
+
+    #logout-btn {
+      background-color: #dc3545;
+    }
+    #logout-btn:hover {
+      background-color: #a71d2a;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Admin Dashboard</h1>
+  <div id="welcome">Loading...</div>
+
+  <div class="btn-group">
+    <button id="pending-btn">Pending Pets Approval</button>
+    <button id="manage-btn">Manage Pets</button>
+  </div>
+
+  <button id="logout-btn">Logout</button>
+
+  <script>
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    const welcomeDiv = document.getElementById('welcome');
+
+    if (!token) {
+      // Not logged in, redirect to login
+      window.location.href = '/login.html';
+    } else {
+      // Decode token payload to get username and role (simple base64 decode)
+      function parseJwt(token) {
+        try {
+          return JSON.parse(atob(token.split('.')[1]));
+        } catch(e) {
+          return null;
+        }
+      }
+
+      const user = parseJwt(token);
+
+      if (!user || user.role !== 'admin') {
+        alert('Admin access required');
+        window.location.href = '/login.html';
+      } else {
+        welcomeDiv.textContent = `Welcome, ${user.username}!`;
+      }
+    }
+
+    document.getElementById('pending-btn').addEventListener('click', () => {
+      window.location.href = '/admin-pending.html';
+    });
+
+    document.getElementById('manage-btn').addEventListener('click', () => {
+      window.location.href = '/admin-pets.html'; // create this page next
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    });
+  </script>
+
+</body>
+</html>

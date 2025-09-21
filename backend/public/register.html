@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register - Pet Adoption App</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: url('https://media.istockphoto.com/id/1417882544/photo/large-group-of-cats-and-dogs-looking-at-the-camera-on-blue-background.jpg?s=612x612&w=0&k=20&c=kGKANSIFdNfhBJMipyuaKU4BcVE1oELWev9lF2ickE0=');
+background-repeat: no-repeat;
+background-size: cover;
+background-position: center;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+    
+    .register-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      width: 320px;
+    }
+  
+    .register-container h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #2a7ae2;
+    }
+  
+    .register-container input,
+    .register-container button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+  
+    .register-container button {
+      background-color: #2a7ae2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+  
+    .register-container button:hover {
+      background-color: #1a5ac2;
+    }
+  
+    #register-error {
+      color: red;
+      text-align: center;
+      margin-top: 0.5rem;
+      min-height: 1.2rem;
+      font-weight: 600;
+    }
+
+    #register-success {
+      color: green;
+      text-align: center;
+      margin-top: 0.5rem;
+      min-height: 1.2rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h2>Register</h2>
+    <form id="register-form" autocomplete="off">
+      <input type="text" id="username" placeholder="Username" required autocomplete="username" />
+      <input type="email" id="email" placeholder="Email" required autocomplete="email" />
+      <input type="password" id="password" placeholder="Password" required autocomplete="new-password" />
+      <!-- Removed role select -->
+      <button type="submit">Register</button>
+    </form>
+    <p id="register-error"></p>
+    <p id="register-success"></p>
+  </div>
+
+  <script>
+    const registerForm = document.getElementById('register-form');
+    const errorEl = document.getElementById('register-error');
+    const successEl = document.getElementById('register-success');
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      errorEl.textContent = '';
+      successEl.textContent = '';
+
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        // Register user, role forced to 'user' in backend or here
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password, role: 'user' })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          successEl.textContent = 'Registration successful! Logging you in...';
+
+          // Automatically login user after registration
+          const loginResponse = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, role: 'user' })
+          });
+
+          if (loginResponse.ok) {
+            const loginData = await loginResponse.json();
+            localStorage.setItem('token', loginData.token);
+            setTimeout(() => {
+              window.location.href = '/index.html';
+            }, 1000);
+          } else {
+            errorEl.textContent = 'Auto-login failed, please login manually.';
+            setTimeout(() => {
+              window.location.href = '/login.html';
+            }, 2000);
+          }
+        } else {
+          errorEl.textContent = data.error || 'Registration failed.';
+        }
+      } catch (err) {
+        errorEl.textContent = 'An error occurred. Please try again.';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

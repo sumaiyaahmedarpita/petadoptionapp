@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Submit Pet for Adoption</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: url('https://cdn.pixabay.com/photo/2016/03/27/19/36/paw-1284514_1280.png');
+      background-repeat: repeat;
+      background-size: 100px 100px;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+
+    .submit-container {
+      background: white;
+      padding: 2rem 2.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      width: 320px;
+      box-sizing: border-box;
+    }
+
+    .submit-container h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #2a7ae2;
+      font-weight: 700;
+      font-size: 2rem;
+    }
+
+    form label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+      color: #2a7ae2;
+      font-size: 0.9rem;
+    }
+
+    form input,
+    form textarea {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: inherit;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    form input:focus,
+    form textarea:focus {
+      border-color: #2a7ae2;
+      outline: none;
+      box-shadow: 0 0 5px #2a7ae2;
+    }
+
+    form button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #28a745; /* green */
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    form button:hover {
+      background-color: #218838;
+    }
+
+    #message {
+      margin-top: 1rem;
+      font-weight: 600;
+      text-align: center;
+      min-height: 1.2rem;
+      color: #dc3545; /* red for errors */
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 1.5rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #28a745;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      min-width: 280px;
+    }
+  </style>
+</head>
+<body>
+  <main class="submit-container">
+    <h1>Submit a Pet for Adoption</h1>
+    <form id="submitPetForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required />
+
+      <label for="breed">Breed:</label>
+      <input type="text" id="breed" name="breed" />
+
+      <label for="age">Age:</label>
+      <input type="number" id="age" name="age" min="0" />
+
+      <label for="description">Description:</label>
+      <textarea id="description" name="description" rows="4"></textarea>
+
+      <label for="image">Image URL:</label>
+      <input type="url" id="image" name="image" />
+
+      <button type="submit">Submit Pet</button>
+    </form>
+    <p id="message"></p>
+  </main>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      Pet submitted successfully! Redirecting...
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('submitPetForm');
+    const message = document.getElementById('message');
+    const modal = document.getElementById('confirmationModal');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.textContent = 'You must be logged in to submit a pet.';
+        return;
+      }
+
+      const formData = new FormData(form);
+      const petData = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch('http://localhost:3000/api/pendingPets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(petData)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          form.reset();
+          message.textContent = '';
+          modal.style.display = 'flex';
+
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
+        } else {
+          message.textContent = data.error || 'Failed to submit pet.';
+        }
+      } catch (err) {
+        message.textContent = 'Error submitting pet.';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Pet Adoption App</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: url('https://media.istockphoto.com/id/1445196818/photo/group-of-cute-pets-on-white-background-banner-design.jpg?s=612x612&w=0&k=20&c=TFz9WoJfr7o_9VhuUA4XM6B4BC3gQ_TmA2C8Xe372C8=');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #f4f4f4;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+
+    .login-container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      width: 320px;
+      box-sizing: border-box;
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #2a7ae2;
+    }
+
+    .login-container input,
+    .login-container button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    .login-container button {
+      background-color: #2a7ae2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+
+    .login-container button:hover {
+      background-color: #1a5ac2;
+    }
+
+    #login-error {
+      color: red;
+      text-align: center;
+      margin-top: 0.5rem;
+      min-height: 1.2rem;
+      font-weight: 600;
+    }
+
+    #register-link {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    #register-link a {
+      color: #2a7ae2;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    #register-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login</h2>
+    <form id="login-form" autocomplete="off">
+      <input type="text" id="username" placeholder="Username" required autocomplete="username" />
+      <input type="password" id="password" placeholder="Password" required autocomplete="current-password" />
+      <button type="submit">Login</button>
+    </form>
+    <p id="login-error"></p>
+    <p id="register-link">
+      Don't have an account? <a href="register.html">Register here</a>
+    </p>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('login-form');
+    const errorEl = document.getElementById('login-error');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!username || !password) {
+        errorEl.textContent = "Please fill in all fields.";
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userRole', data.user.role);
+
+          // Redirect based on user role
+          if (data.user.role === 'admin') {
+            window.location.href = '/admin-pets.html';
+          } else {
+            window.location.href = '/';
+          }
+        } else {
+          errorEl.textContent = data.error || "Login failed.";
+        }
+      } catch (err) {
+        errorEl.textContent = "Something went wrong.";
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

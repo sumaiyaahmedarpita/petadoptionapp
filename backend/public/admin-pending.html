@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Pending Pets Approval</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .pending-list {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .pending-card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      width: 280px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .pending-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+    .pending-content {
+      padding: 12px;
+      flex-grow: 1;
+    }
+    .btn-group {
+      display: flex;
+      justify-content: space-around;
+      padding: 12px;
+    }
+    button {
+      cursor: pointer;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: background-color 0.2s ease;
+    }
+    button.approve {
+      background-color: #28a745;
+      color: white;
+    }
+    button.approve:hover {
+      background-color: #218838;
+    }
+    button.delete {
+      background-color: #dc3545;
+      color: white;
+    }
+    button.delete:hover {
+      background-color: #c82333;
+    }
+    #message {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pending Pets for Approval</h1>
+  </header>
+
+  <main>
+    <div id="message"></div>
+    <div id="pending-list" class="pending-list"></div>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const message = document.getElementById('message');
+    const pendingList = document.getElementById('pending-list');
+
+    if (!token) {
+      message.textContent = 'You must be logged in as admin to access this page.';
+    } else {
+      fetchPendingPets();
+    }
+
+    async function fetchPendingPets() {
+      try {
+        const res = await fetch('http://localhost:3000/api/pendingPets', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch pending pets');
+        const pets = await res.json();
+
+        if (pets.length === 0) {
+          pendingList.innerHTML = '<p>No pending pets at the moment.</p>';
+          return;
+        }
+
+        pendingList.innerHTML = '';
+
+        pets.forEach(pet => {
+          const card = document.createElement('div');
+          card.className = 'pending-card';
+          card.innerHTML = `
+            <img src="${pet.image || 'https://via.placeholder.com/280x160?text=No+Image'}" alt="${pet.name}" />
+            <div class="pending-content">
+              <h3>${pet.name}</h3>
+              <p><strong>Breed:</strong> ${pet.breed || 'N/A'}</p>
+              <p><strong>Age:</strong> ${pet.age} year${pet.age > 1 ? 's' : ''}</p>
+              <p>${pet.description || ''}</p>
+            </div>
+            <div class="btn-group">
+              <button class="approve" onclick="approvePet('${pet._id}')">Approve</button>
+              <button class="delete" onclick="deletePet('${pet._id}')">Delete</button>
+            </div>
+          `;
+          pendingList.appendChild(card);
+        });
+      } catch (err) {
+        message.textContent = err.message;
+      }
+    }
+
+    async function approvePet(id) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/pendingPets/${id}/approve`, {
+          method: 'PUT',  // Correct method PUT
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to approve pet');
+        message.textContent = data.message || 'Pet approved!';
+        fetchPendingPets();
+      } catch (err) {
+        message.textContent = err.message;
+      }
+    }
+
+    async function deletePet(id) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/pendingPets/${id}/reject`, {
+          method: 'DELETE', // Correct endpoint with /reject
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to delete pet');
+        message.textContent = data.message || 'Pet deleted!';
+        fetchPendingPets();
+      } catch (err) {
+        message.textContent = err.message;
+      }
+    }
+  </script>
+</body>
+</html>

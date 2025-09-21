@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pet Adoption App</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Logout and Submit Pet buttons */
+    #logout-btn, #submit-pet-btn {
+      position: fixed;
+      top: 1rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 1000;
+      color: white;
+    }
+
+    #logout-btn {
+      right: 1rem;
+      background-color: #dc3545; /* red */
+      display: none; /* Hidden initially */
+    }
+    #logout-btn:hover {
+      background-color: #c82333;
+    }
+
+    #submit-pet-btn {
+      right: 110px; /* place to the left of logout button */
+      background-color: #28a745; /* green */
+      display: none; /* Hidden initially */
+    }
+    #submit-pet-btn:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="main-heading">Available Pets for Adoption</h1>
+  </header>
+
+  <button id="submit-pet-btn">Submit a Pet</button>
+  <button id="logout-btn">Logout</button>
+
+  <main>
+    <div id="pet-list" class="pet-list" style="display:none;"></div>
+
+    <section class="contact-section" style="display:none;">
+      <h2>Contact Us</h2>
+      <p class="contact-instruction">If you are interested in adopting, contact us:</p>
+      <ul class="contact-list">
+        <li>
+          <img src="icons/email.svg" alt="Email" class="icon" />
+          <a href="mailto:petadoptionapp@gmail.com">petadoptionapp@gmail.com</a>
+        </li>
+        <li>
+          <img src="icons/phone.svg" alt="Phone" class="icon" />
+          +880 1234 567890
+        </li>
+        <li>
+          <img src="icons/facebook.svg" alt="Facebook" class="icon" />
+          <a href="https://www.facebook.com/petadoptionbd" target="_blank" rel="noopener">Pet Adoption BD</a>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Pet Adoption App</p>
+  </footer>
+
+  <script>
+    const petList = document.getElementById('pet-list');
+    const contactSection = document.querySelector('.contact-section');
+    const logoutBtn = document.getElementById('logout-btn');
+    const submitPetBtn = document.getElementById('submit-pet-btn');
+
+    // Show UI for logged-in users
+    function showLoggedInUI() {
+      petList.style.display = 'grid';
+      contactSection.style.display = 'block';
+      logoutBtn.style.display = 'inline-block';
+      submitPetBtn.style.display = 'inline-block';
+      fetchAndDisplayPets();
+    }
+
+    // Redirect to login page
+    function redirectToLogin() {
+      window.location.href = '/login.html';
+    }
+
+    // Fetch pets and display them
+    async function fetchAndDisplayPets() {
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/pets', {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+        const pets = await res.json();
+
+        petList.innerHTML = '';
+
+        if (!pets.length) {
+          petList.innerHTML = '<p>No pets available for adoption at the moment.</p>';
+          return;
+        }
+
+        pets.forEach(pet => {
+          const card = document.createElement('div');
+          card.className = 'pet-card';
+          card.innerHTML = `
+            <img src="${pet.image || 'https://via.placeholder.com/260x180?text=No+Image'}" alt="${pet.name}" />
+            <div class="pet-card-content">
+              <h3>${pet.name}</h3>
+              <p><strong>Breed:</strong> ${pet.breed || 'N/A'}</p>
+              <p><strong>Age:</strong> ${pet.age} year${pet.age > 1 ? 's' : ''}</p>
+              <p>${pet.description || ''}</p>
+            </div>
+          `;
+          petList.appendChild(card);
+        });
+      } catch (err) {
+        petList.innerHTML = '<p>Error loading pets. Please try again later.</p>';
+      }
+    }
+
+    // Check token on load
+    const token = localStorage.getItem('token');
+    if (token) {
+      showLoggedInUI();
+    } else {
+      redirectToLogin();
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('token');
+      redirectToLogin();
+    });
+
+    submitPetBtn.addEventListener('click', () => {
+      window.location.href = 'submit-pet.html';
+    });
+  </script>
+</body>
+</html>
